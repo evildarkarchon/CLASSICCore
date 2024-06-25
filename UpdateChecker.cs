@@ -8,7 +8,7 @@ namespace CLASSICCore
 
         public static async Task<bool> ClassicUpdateCheck()
         {
-            LoggerConfig.LogDebug("INITIATED UPDATE CHECK");
+            ClassicLogger.LogDebug("INITIATED UPDATE CHECK");
             if (YamlData.Settings_Query<bool>("Update Check") == true)
             {
                 string? classicLocal = YamlData.CLASSIC_Main.ReadEntry<string>("CLASSIC_Info.version");
