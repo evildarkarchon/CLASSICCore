@@ -100,7 +100,7 @@ namespace CLASSICCore
         }
         private static readonly Random random = new Random();
 
-        public static void CrashlogsScan()
+        public static void CrashlogsScan(string loadOrderLocation="loadorder.txt")
         {
             Console.WriteLine("REFORMATTING CRASH LOGS, PLEASE WAIT...\n");
             CrashlogsReformat();
@@ -257,7 +257,7 @@ namespace CLASSICCore
                 crashlogGPUI = !crashlogGPUAMD && !crashlogGPUNV;
 
                 // IF LOADORDER FILE EXISTS, USE ITS PLUGINS
-                if (File.Exists("loadorder.txt"))
+                if (File.Exists(loadOrderLocation))
                 {
                     autoscanReport.AddRange(new[]
                     {
@@ -265,15 +265,13 @@ namespace CLASSICCore
                         "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n",
                         "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n"
                     });
-
-                    var loadorderData = File.ReadAllLines("loadorder.txt", Encoding.UTF8);
-                    foreach (var elem in loadorderData.Skip(1))
+#pragma warning disable CS8604 // Possible null reference argument.
+                    foreach (var elem in GetLoadOrder().Skip(1).Where(elem => !crashlogPlugins.ContainsKey(elem)))
                     {
-                        if (!crashlogPlugins.ContainsKey(elem))
-                        {
-                            crashlogPlugins[elem] = "LO";
-                        }
+                        crashlogPlugins[elem] = "LO";
                     }
+#pragma warning restore CS8604 // Possible null reference argument.
+
                     triggerPluginsLoaded = true;
                 }
                 else // OTHERWISE, USE PLUGINS FROM CRASH LOG
@@ -284,7 +282,7 @@ namespace CLASSICCore
                         {
                             triggerPluginLimit = true;
                         }
-                        if (elem.Contains(" "))
+                        if (elem.Contains(' '))
                         {
                             var elemParts = elem.Replace("     ", " ").Trim().Split(' ', 2);
                             elemParts[0] = elemParts[0].Replace("[", "").Replace(":", "").Replace("]", "");
@@ -972,6 +970,22 @@ namespace CLASSICCore
                     }
                 }
             }
+        }
+
+        private static string[]? GetLoadOrder(string loadOrderFile="loadorder.txt")
+        {
+            if (loadOrderFile == "loadorder.txt")
+            {
+#pragma warning disable CS8604 // Possible null reference argument.
+                loadOrderFile = Path.Combine(Directory.GetCurrentDirectory(), "loadorder.txt");
+#pragma warning restore CS8604 // Possible null reference argument.
+            }
+            if (File.Exists(loadOrderFile))
+            {
+                var loadOrderData = File.ReadAllLines(loadOrderFile, Encoding.UTF8);
+                return loadOrderData;
+            }
+            return null;
         }
 
         private static string GetRandomHint()
